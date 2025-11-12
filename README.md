@@ -18,8 +18,8 @@ Build and deploy your first voice AI bot in under 10 minutes. Develop locally, t
 You'll need API keys from three services:
 
 - [Deepgram](https://console.deepgram.com/signup) for Speech-to-Text
-- [OpenAI](https://auth.openai.com/create-account) for LLM inference
-- [Cartesia](https://play.cartesia.ai/sign-up) for Text-to-Speech
+- [xAI](https://x.ai/) for Grok LLM inference
+- [ElevenLabs](https://elevenlabs.io/app/sign-up) for Text-to-Speech
 
 > 💡 **Tip**: Sign up for all three now. You'll need them for both local and cloud deployment.
 
@@ -46,8 +46,10 @@ Navigate to the quickstart directory and set up your environment.
 
    ```ini
    DEEPGRAM_API_KEY=your_deepgram_api_key
-   OPENAI_API_KEY=your_openai_api_key
-   CARTESIA_API_KEY=your_cartesia_api_key
+   XAI_API_KEY=your_xai_api_key
+   ELEVENLABS_API_KEY=your_elevenlabs_api_key
+   # Optional voice override; defaults to 21m00Tcm4TlvDq8ikWAM (Rachel)
+   # ELEVENLABS_VOICE_ID=your_voice_id
    ```
 
 3. Set up a virtual environment and install dependencies

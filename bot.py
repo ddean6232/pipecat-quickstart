@@ -11,8 +11,8 @@ browser and speak with it. You can also deploy this bot to Pipecat Cloud.
 
 Required AI services:
 - Deepgram (Speech-to-Text)
-- OpenAI (LLM)
-- Cartesia (Text-to-Speech)
+- xAI Grok (LLM)
+- ElevenLabs (Text-to-Speech)
 
 Run the bot using::
 
@@ -43,14 +43,13 @@ logger.info("Loading pipeline components...")
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
 from pipecat.pipeline.task import PipelineParams, PipelineTask
-from pipecat.processors.aggregators.llm_context import LLMContext
-from pipecat.processors.aggregators.llm_response_universal import LLMContextAggregatorPair
+from pipecat.processors.aggregators.openai_llm_context import OpenAILLMContext
 from pipecat.processors.frameworks.rtvi import RTVIConfig, RTVIObserver, RTVIProcessor
 from pipecat.runner.types import RunnerArguments
 from pipecat.runner.utils import create_transport
-from pipecat.services.cartesia.tts import CartesiaTTSService
+from pipecat.services.elevenlabs.tts import ElevenLabsTTSService
 from pipecat.services.deepgram.stt import DeepgramSTTService
-from pipecat.services.openai.llm import OpenAILLMService
+from pipecat.services.grok.llm import GrokLLMService
 from pipecat.transports.base_transport import BaseTransport, TransportParams
 from pipecat.transports.daily.transport import DailyParams
 
@@ -64,22 +63,30 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
 
     stt = DeepgramSTTService(api_key=os.getenv("DEEPGRAM_API_KEY"))
 
-    tts = CartesiaTTSService(
-        api_key=os.getenv("CARTESIA_API_KEY"),
-        voice_id="71a7ad14-091c-4e8e-a314-022ece01c121",  # British Reading Lady
+    elevenlabs_api_key = os.getenv("ELEVENLABS_API_KEY")
+    if not elevenlabs_api_key:
+        raise RuntimeError("Missing ElevenLabs API key. Set ELEVENLABS_API_KEY.")
+
+    tts = ElevenLabsTTSService(
+        api_key=elevenlabs_api_key,
+        voice_id=os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM"),
     )
 
-    llm = OpenAILLMService(api_key=os.getenv("OPENAI_API_KEY"))
+    grok_api_key = os.getenv("XAI_API_KEY") or os.getenv("GROK_API_KEY")
+    if not grok_api_key:
+        raise RuntimeError("Missing Grok API key. Set XAI_API_KEY or GROK_API_KEY.")
 
-    messages = [
-        {
-            "role": "system",
-            "content": "You are a friendly AI assistant. Respond naturally and keep your answers conversational.",
-        },
-    ]
+    llm = GrokLLMService(api_key=grok_api_key)
 
-    context = LLMContext(messages)
-    context_aggregator = LLMContextAggregatorPair(context)
+    context = OpenAILLMContext.from_messages(
+        [
+            {
+                "role": "system",
+                "content": "You are a friendly AI assistant. Respond naturally and keep your answers conversational.",
+            },
+        ]
+    )
+    context_aggregator = llm.create_context_aggregator(context)
 
     rtvi = RTVIProcessor(config=RTVIConfig(config=[]))
 
@@ -109,7 +116,9 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     async def on_client_connected(transport, client):
         logger.info(f"Client connected")
         # Kick off the conversation.
-        messages.append({"role": "system", "content": "Say hello and briefly introduce yourself."})
+        context.add_message(
+            {"role": "system", "content": "Say hello and briefly introduce yourself."}
+        )
         await task.queue_frames([LLMRunFrame()])
 
     @transport.event_handler("on_client_disconnected")
