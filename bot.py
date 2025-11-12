@@ -89,7 +89,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         [
             {
                 "role": "system",
-                "content": "You are a friendly AI assistant. Respond naturally and keep your answers conversational.",
+                "content": "Your name is Jessica. You are a friendly AI assistant. Respond naturally and keep your answers conversational and brief.",
             },
         ]
     )
