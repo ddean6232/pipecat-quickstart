@@ -47,8 +47,8 @@ from pipecat.processors.aggregators.openai_llm_context import OpenAILLMContext
 from pipecat.processors.frameworks.rtvi import RTVIConfig, RTVIObserver, RTVIProcessor
 from pipecat.runner.types import RunnerArguments
 from pipecat.runner.utils import create_transport
-from pipecat.services.elevenlabs.tts import ElevenLabsTTSService
 from pipecat.services.deepgram.stt import DeepgramSTTService
+from pipecat.services.elevenlabs.tts import ElevenLabsTTSService
 from pipecat.services.grok.llm import GrokLLMService
 from pipecat.transports.base_transport import BaseTransport, TransportParams
 from pipecat.transports.daily.transport import DailyParams
@@ -70,6 +70,13 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     tts = ElevenLabsTTSService(
         api_key=elevenlabs_api_key,
         voice_id=os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM"),
+        model="eleven_flash_v2_5",                      # (optional) TTS model
+        params=ElevenLabsTTSService.InputParams(
+            language="en",                          # Speech language, e.g., 'en'
+            speed=1.0,                              # Speech speed (0.25 to 4.0)
+            stability=0.75,                         # (optional) Voice stability (0.0 to 1.0)
+            similarity_boost=0.5                    # (optional) Voice similarity (0.0 to 1.0)
+        ),
     )
 
     grok_api_key = os.getenv("XAI_API_KEY") or os.getenv("GROK_API_KEY")
